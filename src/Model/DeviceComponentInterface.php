@@ -8,6 +8,5 @@ interface DeviceComponentInterface
 {
     public function getCapabilities(): array;
 
-    public function setCapabilities(array $value): DeviceComponentInterface;
-
+    public function setCapabilities(array $value): self;
 }

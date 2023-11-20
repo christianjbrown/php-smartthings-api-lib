@@ -9,14 +9,15 @@ use ChristianBrown\SmartThings\Model\DeviceInterface;
 use ChristianBrown\SmartThings\Model\DeviceStatusInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceStatusTransformerInterface;
 use RuntimeException;
+
 use function is_array;
 use function sprintf;
 
 final class DeviceStatusApi implements DeviceStatusApiInterface
 {
-    private RequestSenderInterface $requestSender;
-    private DeviceStatusTransformerInterface $deviceStatusTransformer;
     private string $apiToken;
+    private DeviceStatusTransformerInterface $deviceStatusTransformer;
+    private RequestSenderInterface $requestSender;
 
     public function __construct(RequestSenderInterface $requestSender, DeviceStatusTransformerInterface $deviceStatusTransformer, string $apiToken)
     {

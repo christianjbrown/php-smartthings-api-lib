@@ -6,20 +6,13 @@ namespace ChristianBrown\SmartThings\Model;
 
 final class DeviceStatusTemperatureMeasurementTemperature implements DeviceStatusTemperatureMeasurementTemperatureInterface
 {
-    private float $value;
-    private string $unit;
     private int $timestamp;
+    private string $unit;
+    private float $value;
 
-    public function getValue(): float
+    public function getTimestamp(): int
     {
-        return $this->value;
-    }
-
-    public function setValue(float $value): DeviceStatusTemperatureMeasurementTemperatureInterface
-    {
-        $this->value = $value;
-
-        return $this;
+        return $this->timestamp;
     }
 
     public function getUnit(): string
@@ -27,11 +20,9 @@ final class DeviceStatusTemperatureMeasurementTemperature implements DeviceStatu
         return $this->unit;
     }
 
-    public function setUnit(string $value): DeviceStatusTemperatureMeasurementTemperatureInterface
+    public function getValue(): float
     {
-        $this->unit = $value;
-
-        return $this;
+        return $this->value;
     }
 
     public function setTimestamp(int $value): DeviceStatusTemperatureMeasurementTemperatureInterface
@@ -41,8 +32,17 @@ final class DeviceStatusTemperatureMeasurementTemperature implements DeviceStatu
         return $this;
     }
 
-    public function getTimestamp(): int
+    public function setUnit(string $value): DeviceStatusTemperatureMeasurementTemperatureInterface
     {
-        return $this->timestamp;
+        $this->unit = $value;
+
+        return $this;
+    }
+
+    public function setValue(float $value): DeviceStatusTemperatureMeasurementTemperatureInterface
+    {
+        $this->value = $value;
+
+        return $this;
     }
 }

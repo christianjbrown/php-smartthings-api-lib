@@ -8,9 +8,9 @@ use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementTemperatu
 
 interface DeviceStatusTemperatureMeasurementTemperatureTransformerInterface
 {
-    public const KEY_VALUE = 'value';
-    public const KEY_UNIT = 'unit';
     public const KEY_TIMESTAMP = 'timestamp';
+    public const KEY_UNIT = 'unit';
+    public const KEY_VALUE = 'value';
 
     public function transform(array $data): DeviceStatusTemperatureMeasurementTemperatureInterface;
 }
