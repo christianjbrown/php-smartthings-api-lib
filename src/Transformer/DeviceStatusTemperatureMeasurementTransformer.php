@@ -22,12 +22,11 @@ final class DeviceStatusTemperatureMeasurementTransformer implements DeviceStatu
 
     public function transform(array $data): DeviceStatusTemperatureMeasurementInterface
     {
-        $temperatureMeasurement = new DeviceStatusTemperatureMeasurement();
         if (empty($data[self::KEY_TEMPERATURE]) || !is_array($data[self::KEY_TEMPERATURE])) {
             throw new RuntimeException(sprintf('%s not set or not an array', self::KEY_TEMPERATURE));
         }
         $temperature = $this->deviceStatusTemperatureMeasurementTemperatureTransformer->transform($data[self::KEY_TEMPERATURE]);
-        $temperatureMeasurement->setTemperature($temperature);
+        $temperatureMeasurement = new DeviceStatusTemperatureMeasurement($temperature);
 
         return $temperatureMeasurement;
     }

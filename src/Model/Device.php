@@ -6,10 +6,15 @@ namespace ChristianBrown\SmartThings\Model;
 
 final class Device implements DeviceInterface
 {
-    private array $components;
+    private array $components = [];
     private string $deviceId;
-    private string $label;
-    private string $name;
+    private ?string $label = null;
+    private ?string $name = null;
+
+    public function __construct(string $deviceId)
+    {
+        $this->deviceId = $deviceId;
+    }
 
     public function getComponents(): array
     {
@@ -21,12 +26,12 @@ final class Device implements DeviceInterface
         return $this->deviceId;
     }
 
-    public function getLabel(): string
+    public function getLabel(): ?string
     {
         return $this->label;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -45,14 +50,14 @@ final class Device implements DeviceInterface
         return $this;
     }
 
-    public function setLabel(string $value): DeviceInterface
+    public function setLabel(?string $value): DeviceInterface
     {
         $this->label = $value;
 
         return $this;
     }
 
-    public function setName(string $value): DeviceInterface
+    public function setName(?string $value): DeviceInterface
     {
         $this->name = $value;
 

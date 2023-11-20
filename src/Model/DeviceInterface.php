@@ -10,15 +10,15 @@ interface DeviceInterface
 
     public function getDeviceId(): string;
 
-    public function getLabel(): string;
+    public function getLabel(): ?string;
 
-    public function getName(): string;
+    public function getName(): ?string;
 
     public function setComponents(array $value): self;
 
     public function setDeviceId(string $value): self;
 
-    public function setLabel(string $value): self;
+    public function setLabel(?string $value): self;
 
-    public function setName(string $value): self;
+    public function setName(?string $value): self;
 }
