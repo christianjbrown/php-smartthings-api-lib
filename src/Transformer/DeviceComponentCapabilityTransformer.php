@@ -7,6 +7,7 @@ namespace ChristianBrown\SmartThings\Transformer;
 use ChristianBrown\SmartThings\Model\DeviceComponentCapability;
 use ChristianBrown\SmartThings\Model\DeviceComponentCapabilityInterface;
 use RuntimeException;
+
 use function is_string;
 use function sprintf;
 

@@ -6,17 +6,15 @@ namespace ChristianBrown\SmartThings\Model;
 
 interface DeviceStatusTemperatureMeasurementTemperatureInterface
 {
-    public function getValue(): float;
-
-    public function setValue(float $value): self;
+    public function getTimestamp(): int;
 
     public function getUnit(): string;
 
-    public function setUnit(string $value): self;
+    public function getValue(): float;
 
     public function setTimestamp(int $value): self;
 
-    public function getTimestamp(): int;
+    public function setUnit(string $value): self;
 
-
+    public function setValue(float $value): self;
 }

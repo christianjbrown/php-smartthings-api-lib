@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Transformer;
 
-use ChristianBrown\SmartThings\Model\DeviceComponent;
-use ChristianBrown\SmartThings\Model\DeviceComponentInterface;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurement;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementInterface;
 use RuntimeException;
+
 use function is_array;
 use function sprintf;
 

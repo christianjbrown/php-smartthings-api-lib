@@ -19,5 +19,4 @@ final class DeviceStatusTemperatureMeasurement implements DeviceStatusTemperatur
 
         return $this;
     }
-
 }

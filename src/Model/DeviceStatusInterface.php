@@ -6,6 +6,7 @@ namespace ChristianBrown\SmartThings\Model;
 
 interface DeviceStatusInterface
 {
-    public function setTemperatureMeasurement(?DeviceStatusTemperatureMeasurementInterface $temperatureMeasurement): self;
     public function getTemperatureMeasurement(): ?DeviceStatusTemperatureMeasurementInterface;
+
+    public function setTemperatureMeasurement(?DeviceStatusTemperatureMeasurementInterface $temperatureMeasurement): self;
 }

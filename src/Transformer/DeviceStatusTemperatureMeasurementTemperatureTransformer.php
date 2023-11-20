@@ -7,6 +7,7 @@ namespace ChristianBrown\SmartThings\Transformer;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementTemperature;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementTemperatureInterface;
 use RuntimeException;
+
 use function is_string;
 use function sprintf;
 use function strtotime;
