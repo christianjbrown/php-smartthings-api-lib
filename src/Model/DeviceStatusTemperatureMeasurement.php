@@ -8,6 +8,11 @@ final class DeviceStatusTemperatureMeasurement implements DeviceStatusTemperatur
 {
     private DeviceStatusTemperatureMeasurementTemperatureInterface $temperature;
 
+    public function __construct(DeviceStatusTemperatureMeasurementTemperatureInterface $temperature)
+    {
+        $this->temperature = $temperature;
+    }
+
     public function getTemperature(): DeviceStatusTemperatureMeasurementTemperatureInterface
     {
         return $this->temperature;

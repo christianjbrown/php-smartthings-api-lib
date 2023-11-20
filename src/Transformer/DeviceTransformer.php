@@ -8,6 +8,7 @@ use ChristianBrown\SmartThings\Model\Device;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
 use RuntimeException;
 
+use function is_array;
 use function is_string;
 use function sprintf;
 
@@ -22,21 +23,24 @@ final class DeviceTransformer implements DeviceTransformerInterface
 
     public function transform(array $data): DeviceInterface
     {
-        $device = new Device();
-        foreach ([self::KEY_DEVICE_ID, self::KEY_LABEL, self::KEY_NAME] as $key) {
-            if (empty($data[$key]) || !is_string($data[$key])) {
-                throw new RuntimeException(sprintf('%s not set or not a string', $key));
-            }
+        if (empty($data[self::KEY_DEVICE_ID]) || !is_string($data[self::KEY_DEVICE_ID])) {
+            throw new RuntimeException(sprintf('%s not set or not a string', self::KEY_DEVICE_ID));
         }
-        $device->setDeviceId($data[self::KEY_DEVICE_ID]);
-        $device->setLabel($data[self::KEY_LABEL]);
-        $device->setName($data[self::KEY_NAME]);
+        $deviceId = $data[self::KEY_DEVICE_ID];
+        $device = new Device($deviceId);
 
-        if (empty($data[self::KEY_COMPONENTS]) || !is_array($data[self::KEY_COMPONENTS])) {
-            throw new RuntimeException(sprintf('%s not set or not an array', self::KEY_COMPONENTS));
+        if (!empty($data[self::KEY_LABEL]) && is_string($data[self::KEY_LABEL])) {
+            $device->setLabel($data[self::KEY_LABEL]);
         }
-        $components = $this->deviceComponentsTransformer->transform($data[self::KEY_COMPONENTS]);
-        $device->setComponents($components);
+
+        if (!empty($data[self::KEY_NAME]) && is_string($data[self::KEY_NAME])) {
+            $device->setName($data[self::KEY_NAME]);
+        }
+
+        if (!empty($data[self::KEY_COMPONENTS]) && is_array($data[self::KEY_COMPONENTS])) {
+            $components = $this->deviceComponentsTransformer->transform($data[self::KEY_COMPONENTS]);
+            $device->setComponents($components);
+        }
 
         return $device;
     }

@@ -6,7 +6,7 @@ namespace ChristianBrown\SmartThings\Model;
 
 final class DeviceComponent implements DeviceComponentInterface
 {
-    private array $capabilities;
+    private array $capabilities = [];
 
     public function getCapabilities(): array
     {

@@ -10,6 +10,13 @@ final class DeviceStatusTemperatureMeasurementTemperature implements DeviceStatu
     private string $unit;
     private float $value;
 
+    public function __construct(int $timestamp, string $unit, float $value)
+    {
+        $this->timestamp = $timestamp;
+        $this->unit = $unit;
+        $this->value = $value;
+    }
+
     public function getTimestamp(): int
     {
         return $this->timestamp;

@@ -15,11 +15,10 @@ final class DeviceComponentCapabilityTransformer implements DeviceComponentCapab
 {
     public function transform(array $data): DeviceComponentCapabilityInterface
     {
-        $capability = new DeviceComponentCapability();
         if (empty($data[self::KEY_ID]) || !is_string($data[self::KEY_ID])) {
             throw new RuntimeException(sprintf('%s not set or not a string', self::KEY_ID));
         }
-        $capability->setId($data[self::KEY_ID]);
+        $capability = new DeviceComponentCapability($data[self::KEY_ID]);
 
         return $capability;
     }
