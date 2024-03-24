@@ -24,7 +24,7 @@ final class DeviceTransformer implements DeviceTransformerInterface
     public function transform(array $data): DeviceInterface
     {
         if (empty($data[self::KEY_DEVICE_ID]) || !is_string($data[self::KEY_DEVICE_ID])) {
-            throw new RuntimeException(sprintf('%s not set or not a string', self::KEY_DEVICE_ID));
+            throw new RuntimeException(sprintf(self::UNEXPECTED_STRING_SPRINTF, self::KEY_DEVICE_ID));
         }
         $deviceId = $data[self::KEY_DEVICE_ID];
         $device = new Device($deviceId);
