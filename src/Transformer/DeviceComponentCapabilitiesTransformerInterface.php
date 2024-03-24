@@ -6,7 +6,8 @@ namespace ChristianBrown\SmartThings\Transformer;
 
 interface DeviceComponentCapabilitiesTransformerInterface
 {
-    public const ID_VALUE_TEMPERATURE_MEASUREMENT = 'temperatureMeasurement';
+    public const ARRAY_NAME = 'device component capability';
+    public const UNEXPECTED_ARRAY_SPRINTF = '%s not set or not an array';
 
     public function transform(array $data): array;
 }
