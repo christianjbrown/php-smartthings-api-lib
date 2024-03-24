@@ -2,7 +2,7 @@
     "name": "christianjbrown/php-smarthings-api-lib",
     "require": {
         "php": "^8.2",
-        "christianjbrown/php-json-api-client-lib": "dev-main",
+        "christianjbrown/php-json-api-client-lib": "^1.0",
         "psr/http-client": "^1.0"
     },
     "require-dev": {
