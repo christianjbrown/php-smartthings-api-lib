@@ -25,7 +25,7 @@ final class DeviceComponentTransformer implements DeviceComponentTransformerInte
         $component = new DeviceComponent();
 
         if (empty($data[self::KEY_CAPABILITIES]) || !is_array($data[self::KEY_CAPABILITIES])) {
-            throw new RuntimeException(sprintf('%s not set or not an array', self::KEY_CAPABILITIES));
+            throw new RuntimeException(sprintf(self::UNEXPECTED_ARRAY_SPRINTF, self::KEY_CAPABILITIES));
         }
         $capabilities = $this->deviceComponentCapabilitiesTransformer->transform($data[self::KEY_CAPABILITIES]);
         $component->setCapabilities($capabilities);

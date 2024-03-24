@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ChristianBrown\SmartThings\Tests\Transformer;
+
+use ChristianBrown\SmartThings\Model\DeviceComponent;
+use ChristianBrown\SmartThings\Model\DeviceComponentCapabilityInterface;
+use ChristianBrown\SmartThings\Transformer\DeviceComponentCapabilitiesTransformerInterface;
+use ChristianBrown\SmartThings\Transformer\DeviceComponentTransformer;
+use ChristianBrown\SmartThings\Transformer\DeviceComponentTransformerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+#[CoversClass(DeviceComponent::class)]
+#[CoversClass(DeviceComponentTransformer::class)]
+final class DeviceComponentTransformerTest extends TestCase
+{
+    public function testTransform(): void
+    {
+        $capabilitiesData = ['test-capability-1', 'test-capability-2'];
+        $data = [
+            DeviceComponentTransformerInterface::KEY_CAPABILITIES => $capabilitiesData,
+        ];
+
+        $capabilities = [
+            $this->createMock(DeviceComponentCapabilityInterface::class),
+            $this->createMock(DeviceComponentCapabilityInterface::class),
+        ];
+
+        $capabilitiesTransformer = $this->createMock(DeviceComponentCapabilitiesTransformerInterface::class);
+        $capabilitiesTransformer->method('transform')
+            ->with($capabilitiesData)
+            ->willReturn($capabilities);
+
+        $transformer = new DeviceComponentTransformer($capabilitiesTransformer);
+
+        $actual = $transformer->transform($data);
+
+        self::assertSame($capabilities, $actual->getCapabilities());
+    }
+
+    #[TestWith([[]])]
+    #[TestWith([[DeviceComponentTransformerInterface::KEY_CAPABILITIES => 'test-not-an-array']])]
+    public function testTransformUnexpectedData(array $data): void
+    {
+        $capabilitiesTransformer = $this->createMock(DeviceComponentCapabilitiesTransformerInterface::class);
+        $transformer = new DeviceComponentTransformer($capabilitiesTransformer);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(sprintf(DeviceComponentTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DeviceComponentTransformerInterface::KEY_CAPABILITIES));
+        $transformer->transform($data);
+    }
+}
