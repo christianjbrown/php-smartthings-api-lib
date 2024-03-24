@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Transformer;
 
+use RuntimeException;
+
+use function is_array;
+use function sprintf;
+
 final class DeviceComponentsTransformer implements DeviceComponentsTransformerInterface
 {
     private DeviceComponentTransformerInterface $deviceComponentTransformer;
@@ -17,6 +22,9 @@ final class DeviceComponentsTransformer implements DeviceComponentsTransformerIn
     {
         $components = [];
         foreach ($data as $componentData) {
+            if (!is_array($componentData)) {
+                throw new RuntimeException(sprintf(self::UNEXPECTED_ARRAY_SPRINTF, self::ARRAY_NAME));
+            }
             $components[] = $this->deviceComponentTransformer->transform($componentData);
         }
 
