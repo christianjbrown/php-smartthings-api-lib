@@ -1,26 +1,32 @@
 {
-    "name": "christianjbrown/smarthings-api",
+    "name": "christianjbrown/php-smarthings-api-lib",
     "require": {
         "php": "^8.2",
-        "christianjbrown/user-friendly-exception": "dev-main",
-        "christianjbrown/json-api-client": "dev-main",
+        "christianjbrown/php-json-api-client-lib": "dev-main",
         "psr/http-client": "^1.0"
     },
-    "minimum-stability": "dev",
+    "require-dev": {
+        "christianjbrown/php-code-quality-scripts": "dev-main",
+        "phpunit/phpunit": "^11.0.8"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
     "scripts": {
         "test": [
-            "./vendor/bin/phpunit && open ./.phpunit.cache/code-coverage-html/index.html"
+            "clear && XDEBUG_MODE=coverage ./bin/phpunit && open ./.phpunit.cache/code-coverage-html/index.html"
         ],
-        "lint": [
-            "./vendor/bin/phpcs --standard=vendor/christianjbrown/phpcs-tools/standards/ChristianBrown ./src ./tests || true"
+        "check-style": [
+            "clear && ./bin/php-cs ./src ./tests"
         ],
-        "fix": [
-            "./vendor/bin/php-cs-fixer fix ./src ./tests -vvv --config=vendor/christianjbrown/php-cs-fixer-wrapper/rule-sets/risky.php"
+        "check-style-diff": [
+            "clear && ./bin/php-cs-diff"
         ],
-        "fix-lint-test": [
-            "@fix",
-            "@lint",
-            "@test"
+        "fix-style": [
+            "clear && ./bin/php-cs-fix ./src ./tests"
+        ],
+        "fix-style-diff": [
+            "clear && ./bin/php-cs-fix-diff"
         ]
     },
     "autoload": {
@@ -32,24 +38,11 @@
     "repositories": [
         {
             "type": "github",
-            "url": "git@github.com:christianjbrown/user-friendly-exception.git"
+            "url": "git@github.com:christianjbrown/php-code-quality-scripts.git"
         },
         {
             "type": "github",
-            "url": "git@github.com:christianjbrown/json-api-client.git"
-        },
-        {
-            "type": "github",
-            "url": "git@github.com:christianjbrown/phpcs-tools.git"
-        },
-        {
-            "type": "github",
-            "url": "git@github.com:christianjbrown/php-cs-fixer-wrapper.git"
+            "url": "git@github.com:christianjbrown/php-json-api-client-lib.git"
         }
-    ],
-    "require-dev": {
-        "phpunit/phpunit": "^11.0@dev",
-        "christianjbrown/php-cs-fixer-wrapper": "dev-main",
-        "ext-xdebug": "*"
-    }
+    ]
 }
