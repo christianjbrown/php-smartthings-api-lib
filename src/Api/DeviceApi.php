@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Api;
 
-use ChristianBrown\JsonApiClient\RequestSenderInterface;
+use ChristianBrown\JsonApiClient\JsonApiRequestExceptionInterface;
+use ChristianBrown\JsonApiClient\JsonApiRequestSenderInterface;
 use ChristianBrown\SmartThings\Transformer\DevicesTransformerInterface;
 use RuntimeException;
 
@@ -15,24 +16,28 @@ final class DeviceApi implements DeviceApiInterface
 {
     private string $apiToken;
     private DevicesTransformerInterface $devicesTransformer;
-    private RequestSenderInterface $requestSender;
+    private JsonApiRequestSenderInterface $requestSender;
 
-    public function __construct(RequestSenderInterface $requestSender, DevicesTransformerInterface $devicesTransformer, string $apiToken)
+    public function __construct(JsonApiRequestSenderInterface $requestSender, DevicesTransformerInterface $devicesTransformer, string $apiToken)
     {
         $this->requestSender = $requestSender;
         $this->devicesTransformer = $devicesTransformer;
         $this->apiToken = $apiToken;
     }
 
+    /**
+     * @throws JsonApiRequestExceptionInterface
+     * @throws RuntimeException
+     */
     public function get(): array
     {
         $headers = [
-            'Authorization' => sprintf('Bearer %s', $this->apiToken),
+            self::HEADER_KEY_AUTHORIZATION => sprintf(self::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, $this->apiToken),
         ];
-        $data = $this->requestSender->get(self::API_NAME, self::API_URL, [], $headers);
+        $data = $this->requestSender->get(self::API_URL, [], $headers);
 
         if (empty($data[self::KEY_ITEMS]) || !is_array($data[self::KEY_ITEMS])) {
-            throw new RuntimeException(sprintf('%s not set or not an array', self::KEY_ITEMS));
+            throw new RuntimeException(sprintf(self::UNEXPECTED_RESPONSE_SPRINTF, self::KEY_ITEMS));
         }
         $devices = $this->devicesTransformer->transform($data[self::KEY_ITEMS]);
 

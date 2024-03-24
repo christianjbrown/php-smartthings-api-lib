@@ -7,12 +7,12 @@ namespace ChristianBrown\SmartThings\Api;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
 use ChristianBrown\SmartThings\Model\DeviceStatusInterface;
 
-interface DeviceStatusApiInterface
+interface DeviceStatusApiInterface extends ApiInterface
 {
-    public const API_NAME = 'SmartThings Device Status API';
     public const API_URL_SPRINTF = 'https://api.smartthings.com/v1/devices/%s/status';
     public const KEY_COMPONENTS = 'components';
     public const KEY_COMPONENTS_MAIN = 'main';
+    public const UNEXPECTED_RESPONSE_SPRINTF = '%s not set or not an array';
 
     public function get(DeviceInterface $device): DeviceStatusInterface;
 }
