@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceComponentInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceComponentsTransformer;
 use ChristianBrown\SmartThings\Transformer\DeviceComponentsTransformerInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceComponentTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DeviceComponentsTransformer::class)]
 final class DeviceComponentsTransformerTest extends TestCase
@@ -39,6 +39,41 @@ final class DeviceComponentsTransformerTest extends TestCase
         self::assertSame($components, $actual);
     }
 
+    public function testTransformEmpty(): void
+    {
+        $componentTransformer = $this->createMock(DeviceComponentTransformerInterface::class);
+
+        $transformer = new DeviceComponentsTransformer($componentTransformer);
+
+        self::assertSame([], $transformer->transform([]));
+    }
+
+    public function testTransformSingle(): void
+    {
+        $component1 = $this->createMock(DeviceComponentInterface::class);
+
+        $componentTransformer = $this->createMock(DeviceComponentTransformerInterface::class);
+        $componentTransformer->method('transform')
+            ->with(['test-component-1'])
+            ->willReturn($component1);
+
+        $transformer = new DeviceComponentsTransformer($componentTransformer);
+
+        self::assertSame([$component1], $transformer->transform([['test-component-1']]));
+    }
+
+    public function testTransformThrowsOnFirstNonArray(): void
+    {
+        $componentTransformer = $this->createMock(DeviceComponentTransformerInterface::class);
+
+        $transformer = new DeviceComponentsTransformer($componentTransformer);
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage(sprintf(DeviceComponentsTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DeviceComponentsTransformerInterface::ARRAY_NAME));
+
+        $transformer->transform(['test-component-1-not-array']);
+    }
+
     public function testTransformUnexpected(): void
     {
         $data = [['test-component-1-array'], 'test-component-2-not-array', ['test-component-3-array'], 'test-component-4-not-array'];
@@ -57,7 +92,7 @@ final class DeviceComponentsTransformerTest extends TestCase
 
         $transformer = new DeviceComponentsTransformer($componentTransformer);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DeviceComponentsTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DeviceComponentsTransformerInterface::ARRAY_NAME));
 
         $transformer->transform($data);

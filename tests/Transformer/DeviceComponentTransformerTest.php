@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceComponent;
 use ChristianBrown\SmartThings\Model\DeviceComponentCapabilityInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceComponentCapabilitiesTransformerInterface;
@@ -12,7 +13,6 @@ use ChristianBrown\SmartThings\Transformer\DeviceComponentTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DeviceComponent::class)]
 #[CoversClass(DeviceComponentTransformer::class)]
@@ -42,6 +42,9 @@ final class DeviceComponentTransformerTest extends TestCase
         self::assertSame($capabilities, $actual->getCapabilities());
     }
 
+    /**
+     * @param mixed[] $data
+     */
     #[TestWith([[]])]
     #[TestWith([[DeviceComponentTransformerInterface::KEY_CAPABILITIES => 'test-not-an-array']])]
     public function testTransformUnexpectedData(array $data): void
@@ -49,7 +52,7 @@ final class DeviceComponentTransformerTest extends TestCase
         $capabilitiesTransformer = $this->createMock(DeviceComponentCapabilitiesTransformerInterface::class);
         $transformer = new DeviceComponentTransformer($capabilitiesTransformer);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DeviceComponentTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DeviceComponentTransformerInterface::KEY_CAPABILITIES));
         $transformer->transform($data);
     }

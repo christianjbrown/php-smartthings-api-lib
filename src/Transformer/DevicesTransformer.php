@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Transformer;
 
-use RuntimeException;
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
+use ChristianBrown\SmartThings\Model\DeviceInterface;
 
+use function array_values;
+use function count;
 use function sprintf;
 
 final class DevicesTransformer implements DevicesTransformerInterface
@@ -17,12 +20,19 @@ final class DevicesTransformer implements DevicesTransformerInterface
         $this->deviceTransformer = $deviceTransformer;
     }
 
+    /**
+     * @param mixed[] $data
+     *
+     * @return array<int, DeviceInterface>
+     */
     public function transform(array $data): array
     {
         $devices = [];
-        foreach ($data as $deviceData) {
+        $values = array_values($data);
+        for ($i = 0, $count = count($values); $i < $count; ++$i) {
+            $deviceData = $values[$i];
             if (!is_array($deviceData)) {
-                throw new RuntimeException(sprintf(self::UNEXPECTED_ARRAY_SPRINTF, self::ARRAY_NAME));
+                throw new UnexpectedResponseException(sprintf(self::UNEXPECTED_ARRAY_SPRINTF, self::ARRAY_NAME));
             }
             $devices[] = $this->deviceTransformer->transform($deviceData);
         }

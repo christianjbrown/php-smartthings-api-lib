@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Api;
 
-use ChristianBrown\JsonApiClient\JsonApiRequestExceptionInterface;
-use ChristianBrown\JsonApiClient\JsonApiRequestSenderInterface;
+use ChristianBrown\ApiClient\Exception\Request\RequestExceptionInterface;
+use ChristianBrown\ApiClient\JsonApiRequestSenderInterface;
 use ChristianBrown\SmartThings\Api\ApiInterface;
 use ChristianBrown\SmartThings\Api\DeviceStatusApi;
 use ChristianBrown\SmartThings\Api\DeviceStatusApiInterface;
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
 use ChristianBrown\SmartThings\Model\DeviceStatusInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceStatusTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\MockObject\Exception;
-use PHPUnit\Framework\TestCase;
 
-use RuntimeException;
+use PHPUnit\Framework\TestCase;
 
 use function sprintf;
 
@@ -25,10 +25,46 @@ use function sprintf;
 final class DeviceStatusApiTest extends TestCase
 {
     /**
-     * @throws JsonApiRequestExceptionInterface
+     * @throws RequestExceptionInterface
      * @throws Exception
      */
-    public function testGet(): void
+    public function testGetCachesByDeviceId(): void
+    {
+        $data = [
+            DeviceStatusApiInterface::KEY_COMPONENTS => [
+                DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => ['test-item-1', 'test-item-2'],
+            ],
+        ];
+
+        $device = $this->createMock(DeviceInterface::class);
+        $device->method('getDeviceId')
+            ->willReturn('test-device-id');
+
+        $deviceStatus = $this->createMock(DeviceStatusInterface::class);
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::once())
+            ->method('get')
+            ->willReturn($data);
+
+        $deviceStatusTransformer = $this->createMock(DeviceStatusTransformerInterface::class);
+        $deviceStatusTransformer->expects(self::once())
+            ->method('transform')
+            ->with($data[DeviceStatusApiInterface::KEY_COMPONENTS][DeviceStatusApiInterface::KEY_COMPONENTS_MAIN])
+            ->willReturn($deviceStatus);
+
+        $deviceApi = new DeviceStatusApi($requestSender, $deviceStatusTransformer, 'test-api-token');
+
+        // Second call for the same deviceId is served from the cache without hitting the API.
+        self::assertSame($deviceStatus, $deviceApi->getOneByDevice($device));
+        self::assertSame($deviceStatus, $deviceApi->getOneByDevice($device));
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetOneByDevice(): void
     {
         $data = [
             DeviceStatusApiInterface::KEY_COMPONENTS => [
@@ -59,20 +95,97 @@ final class DeviceStatusApiTest extends TestCase
             ->willReturn($deviceStatus);
 
         $deviceApi = new DeviceStatusApi($requestSender, $deviceStatusTransformer, 'test-api-token');
-        $actual = $deviceApi->get($device);
+        $actual = $deviceApi->getOneByDevice($device);
 
         self::assertSame($deviceStatus, $actual);
     }
 
     /**
-     * @throws JsonApiRequestExceptionInterface
+     * @throws RequestExceptionInterface
      * @throws Exception
      */
-    #[TestWith([['test-items-key-missing'], DeviceStatusApiInterface::KEY_COMPONENTS])]
-    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => 'test-not-array'], DeviceStatusApiInterface::KEY_COMPONENTS])]
-    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => ['test-items-key-missing']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN])]
-    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => [DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => 'test-not-array']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN])]
-    public function testGetUnexpectedResponse(array $data, string $exceptionString): void
+    public function testGetOneById(): void
+    {
+        $data = [
+            DeviceStatusApiInterface::KEY_COMPONENTS => [
+                DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => ['test-item-1', 'test-item-2'],
+            ],
+        ];
+
+        $deviceStatus = $this->createMock(DeviceStatusInterface::class);
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->method('get')
+            ->with(
+                sprintf(DeviceStatusApiInterface::API_URL_SPRINTF, 'test-device-id'),
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $deviceStatusTransformer = $this->createMock(DeviceStatusTransformerInterface::class);
+        $deviceStatusTransformer->method('transform')
+            ->with($data[DeviceStatusApiInterface::KEY_COMPONENTS][DeviceStatusApiInterface::KEY_COMPONENTS_MAIN])
+            ->willReturn($deviceStatus);
+
+        $deviceApi = new DeviceStatusApi($requestSender, $deviceStatusTransformer, 'test-api-token');
+        $actual = $deviceApi->getOneById('test-device-id');
+
+        self::assertSame($deviceStatus, $actual);
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetSkipsCache(): void
+    {
+        $data = [
+            DeviceStatusApiInterface::KEY_COMPONENTS => [
+                DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => ['test-item-1', 'test-item-2'],
+            ],
+        ];
+
+        $device = $this->createMock(DeviceInterface::class);
+        $device->method('getDeviceId')
+            ->willReturn('test-device-id');
+
+        $deviceStatus = $this->createMock(DeviceStatusInterface::class);
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::exactly(2))
+            ->method('get')
+            ->willReturn($data);
+
+        $deviceStatusTransformer = $this->createMock(DeviceStatusTransformerInterface::class);
+        $deviceStatusTransformer->method('transform')
+            ->with($data[DeviceStatusApiInterface::KEY_COMPONENTS][DeviceStatusApiInterface::KEY_COMPONENTS_MAIN])
+            ->willReturn($deviceStatus);
+
+        $deviceApi = new DeviceStatusApi($requestSender, $deviceStatusTransformer, 'test-api-token');
+
+        // First call populates the cache; the second bypasses it and hits the API again.
+        self::assertSame($deviceStatus, $deviceApi->getOneByDevice($device));
+        self::assertSame($deviceStatus, $deviceApi->getOneByDevice($device, true));
+    }
+
+    /**
+     * @param mixed[] $data
+     *
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    #[TestWith([['test-items-key-missing'], DeviceStatusApiInterface::KEY_COMPONENTS, false])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => 'test-not-array'], DeviceStatusApiInterface::KEY_COMPONENTS, false])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => ['test-items-key-missing']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN, false])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => [DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => 'test-not-array']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN, false])]
+    #[TestWith([['test-items-key-missing'], DeviceStatusApiInterface::KEY_COMPONENTS, true])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => 'test-not-array'], DeviceStatusApiInterface::KEY_COMPONENTS, true])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => ['test-items-key-missing']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN, true])]
+    #[TestWith([[DeviceStatusApiInterface::KEY_COMPONENTS => [DeviceStatusApiInterface::KEY_COMPONENTS_MAIN => 'test-not-array']], DeviceStatusApiInterface::KEY_COMPONENTS_MAIN, true])]
+    public function testGetUnexpectedResponse(array $data, string $exceptionString, bool $skipCache): void
     {
         $device = $this->createMock(DeviceInterface::class);
         $device->method('getDeviceId')
@@ -93,8 +206,8 @@ final class DeviceStatusApiTest extends TestCase
 
         $deviceApi = new DeviceStatusApi($requestSender, $deviceStatusTransformer, 'test-api-token');
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DeviceStatusApiInterface::UNEXPECTED_RESPONSE_SPRINTF, $exceptionString));
-        $deviceApi->get($device);
+        $deviceApi->getOneByDevice($device, $skipCache);
     }
 }

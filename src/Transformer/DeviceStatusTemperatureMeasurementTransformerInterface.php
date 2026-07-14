@@ -11,5 +11,8 @@ interface DeviceStatusTemperatureMeasurementTransformerInterface
     public const KEY_TEMPERATURE = 'temperature';
     public const UNEXPECTED_ARRAY_SPRINTF = '%s not set or not an array';
 
+    /**
+     * @param mixed[] $data
+     */
     public function transform(array $data): DeviceStatusTemperatureMeasurementInterface;
 }

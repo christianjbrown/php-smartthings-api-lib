@@ -1,12 +1,29 @@
 {
-    "name": "christianjbrown/php-smarthings-api-lib",
+    "name": "christianjbrown/php-smartthings-api-lib",
+    "description": "A strongly-typed, read-only PHP 8.2+ client for the SmartThings API that returns typed model objects instead of raw arrays.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "smartthings",
+        "api",
+        "client",
+        "iot",
+        "home-automation"
+    ],
+    "authors": [
+        {
+            "name": "Christian Brown"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "christianjbrown/php-api-client-lib": "dev-main",
-        "psr/http-client": "^1.0"
+        "psr/container": "^2.0",
+        "symfony/dependency-injection": "^7.2"
     },
     "require-dev": {
         "christianjbrown/php-code-quality-scripts": "dev-main",
+        "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^11.0.8"
     },
     "config": {
@@ -14,7 +31,7 @@
     },
     "scripts": {
         "test": [
-            "clear && XDEBUG_MODE=coverage ./bin/phpunit && open ./.phpunit.cache/code-coverage-html/index.html"
+            "clear && XDEBUG_MODE=coverage php -d memory_limit=-1 ./bin/phpunit && open ./.phpunit.cache/code-coverage-html/index.html"
         ],
         "check-style": [
             "clear && ./bin/php-cs ./src ./tests"
@@ -27,11 +44,18 @@
         ],
         "fix-style-diff": [
             "clear && ./bin/php-cs-fix-diff"
+        ],
+        "stan": [
+            "clear && ./bin/phpstan analyse"
         ]
     },
     "autoload": {
         "psr-4": {
-            "ChristianBrown\\SmartThings\\": "src/",
+            "ChristianBrown\\SmartThings\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "ChristianBrown\\SmartThings\\Tests\\": "tests/"
         }
     },
