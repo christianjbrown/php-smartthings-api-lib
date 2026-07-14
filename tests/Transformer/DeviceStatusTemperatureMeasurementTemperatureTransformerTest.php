@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementTemperature;
 use ChristianBrown\SmartThings\Transformer\DeviceStatusTemperatureMeasurementTemperatureTransformer;
 use ChristianBrown\SmartThings\Transformer\DeviceStatusTemperatureMeasurementTemperatureTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DeviceStatusTemperatureMeasurementTemperature::class)]
 #[CoversClass(DeviceStatusTemperatureMeasurementTemperatureTransformer::class)]
@@ -33,6 +33,9 @@ final class DeviceStatusTemperatureMeasurementTemperatureTransformerTest extends
         self::assertSame('test-unit', $actual->getUnit());
     }
 
+    /**
+     * @param mixed[] $data
+     */
     #[TestWith([
         [
             DeviceStatusTemperatureMeasurementTemperatureTransformerInterface::KEY_TIMESTAMP => 42,
@@ -97,8 +100,23 @@ final class DeviceStatusTemperatureMeasurementTemperatureTransformerTest extends
     {
         $transformer = new DeviceStatusTemperatureMeasurementTemperatureTransformer();
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf($exceptionMessage, $exceptionMessageField));
         $transformer->transform($data);
+    }
+
+    public function testTransformZeroValue(): void
+    {
+        $data = [
+            DeviceStatusTemperatureMeasurementTemperatureTransformerInterface::KEY_TIMESTAMP => '2021-02-03 12:34:56',
+            DeviceStatusTemperatureMeasurementTemperatureTransformerInterface::KEY_VALUE => 0.0,
+            DeviceStatusTemperatureMeasurementTemperatureTransformerInterface::KEY_UNIT => 'test-unit',
+        ];
+
+        $transformer = new DeviceStatusTemperatureMeasurementTemperatureTransformer();
+
+        $actual = $transformer->transform($data);
+
+        self::assertSame(0.0, $actual->getValue());
     }
 }

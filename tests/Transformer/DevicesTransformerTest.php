@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
 use ChristianBrown\SmartThings\Transformer\DevicesTransformer;
 use ChristianBrown\SmartThings\Transformer\DevicesTransformerInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DevicesTransformer::class)]
 final class DevicesTransformerTest extends TestCase
@@ -39,6 +39,41 @@ final class DevicesTransformerTest extends TestCase
         self::assertSame($devices, $actual);
     }
 
+    public function testTransformEmpty(): void
+    {
+        $deviceTransformer = $this->createMock(DeviceTransformerInterface::class);
+
+        $transformer = new DevicesTransformer($deviceTransformer);
+
+        self::assertSame([], $transformer->transform([]));
+    }
+
+    public function testTransformSingle(): void
+    {
+        $device1 = $this->createMock(DeviceInterface::class);
+
+        $deviceTransformer = $this->createMock(DeviceTransformerInterface::class);
+        $deviceTransformer->method('transform')
+            ->with(['test-device-1'])
+            ->willReturn($device1);
+
+        $transformer = new DevicesTransformer($deviceTransformer);
+
+        self::assertSame([$device1], $transformer->transform([['test-device-1']]));
+    }
+
+    public function testTransformThrowsOnFirstNonArray(): void
+    {
+        $deviceTransformer = $this->createMock(DeviceTransformerInterface::class);
+
+        $transformer = new DevicesTransformer($deviceTransformer);
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage(sprintf(DevicesTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DevicesTransformerInterface::ARRAY_NAME));
+
+        $transformer->transform(['test-device-1-not-array']);
+    }
+
     public function testTransformUnexpected(): void
     {
         $data = [['test-device-1-array'], 'test-device-2-not-array', ['test-device-3-array'], 'test-device-4-not-array'];
@@ -57,7 +92,7 @@ final class DevicesTransformerTest extends TestCase
 
         $transformer = new DevicesTransformer($deviceTransformer);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DevicesTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DevicesTransformerInterface::ARRAY_NAME));
 
         $transformer->transform($data);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ChristianBrown\SmartThings\Tests\Model;
 
 use ChristianBrown\SmartThings\Model\DeviceStatus;
+use ChristianBrown\SmartThings\Model\DeviceStatusRelativeHumidityMeasurementInterface;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -19,5 +20,10 @@ final class DeviceStatusTest extends TestCase
         $temperatureMeasurement = $this->createMock(DeviceStatusTemperatureMeasurementInterface::class);
         self::assertSame($status, $status->setTemperatureMeasurement($temperatureMeasurement));
         self::assertSame($temperatureMeasurement, $status->getTemperatureMeasurement());
+
+        self::assertNull($status->getRelativeHumidityMeasurement());
+        $relativeHumidityMeasurement = $this->createMock(DeviceStatusRelativeHumidityMeasurementInterface::class);
+        self::assertSame($status, $status->setRelativeHumidityMeasurement($relativeHumidityMeasurement));
+        self::assertSame($relativeHumidityMeasurement, $status->getRelativeHumidityMeasurement());
     }
 }

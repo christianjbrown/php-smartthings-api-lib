@@ -14,5 +14,7 @@ interface DeviceStatusApiInterface extends ApiInterface
     public const KEY_COMPONENTS_MAIN = 'main';
     public const UNEXPECTED_RESPONSE_SPRINTF = '%s not set or not an array';
 
-    public function get(DeviceInterface $device): DeviceStatusInterface;
+    public function getOneByDevice(DeviceInterface $device, bool $skipCache = false): DeviceStatusInterface;
+
+    public function getOneById(string $deviceId, bool $skipCache = false): DeviceStatusInterface;
 }

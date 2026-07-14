@@ -11,19 +11,32 @@ use function is_array;
 
 final class DeviceStatusTransformer implements DeviceStatusTransformerInterface
 {
+    private DeviceStatusRelativeHumidityMeasurementTransformerInterface $deviceStatusRelativeHumidityMeasurementTransformer;
     private DeviceStatusTemperatureMeasurementTransformerInterface $deviceStatusTemperatureMeasurementTransformer;
 
-    public function __construct(DeviceStatusTemperatureMeasurementTransformerInterface $deviceStatusTemperatureMeasurementTransformer)
+    public function __construct(DeviceStatusTemperatureMeasurementTransformerInterface $deviceStatusTemperatureMeasurementTransformer, DeviceStatusRelativeHumidityMeasurementTransformerInterface $deviceStatusRelativeHumidityMeasurementTransformer)
     {
         $this->deviceStatusTemperatureMeasurementTransformer = $deviceStatusTemperatureMeasurementTransformer;
+        $this->deviceStatusRelativeHumidityMeasurementTransformer = $deviceStatusRelativeHumidityMeasurementTransformer;
     }
 
+    /**
+     * @param mixed[] $data
+     */
     public function transform(array $data): DeviceStatusInterface
     {
         $status = new DeviceStatus();
-        if (!empty($data[self::KEY_TEMPERATURE_MEASUREMENT]) && is_array($data[self::KEY_TEMPERATURE_MEASUREMENT])) {
-            $temperatureMeasurement = $this->deviceStatusTemperatureMeasurementTransformer->transform($data[self::KEY_TEMPERATURE_MEASUREMENT]);
-            $status->setTemperatureMeasurement($temperatureMeasurement);
+        if (!empty($data[self::KEY_TEMPERATURE_MEASUREMENT])) {
+            if (is_array($data[self::KEY_TEMPERATURE_MEASUREMENT])) {
+                $temperatureMeasurement = $this->deviceStatusTemperatureMeasurementTransformer->transform($data[self::KEY_TEMPERATURE_MEASUREMENT]);
+                $status->setTemperatureMeasurement($temperatureMeasurement);
+            }
+        }
+        if (!empty($data[self::KEY_RELATIVE_HUMIDITY_MEASUREMENT])) {
+            if (is_array($data[self::KEY_RELATIVE_HUMIDITY_MEASUREMENT])) {
+                $relativeHumidityMeasurement = $this->deviceStatusRelativeHumidityMeasurementTransformer->transform($data[self::KEY_RELATIVE_HUMIDITY_MEASUREMENT]);
+                $status->setRelativeHumidityMeasurement($relativeHumidityMeasurement);
+            }
         }
 
         return $status;

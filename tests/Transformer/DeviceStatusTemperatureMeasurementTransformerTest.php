@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurement;
 use ChristianBrown\SmartThings\Model\DeviceStatusTemperatureMeasurementTemperatureInterface;
 use ChristianBrown\SmartThings\Transformer\DeviceStatusTemperatureMeasurementTemperatureTransformerInterface;
@@ -12,7 +13,6 @@ use ChristianBrown\SmartThings\Transformer\DeviceStatusTemperatureMeasurementTra
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 #[CoversClass(DeviceStatusTemperatureMeasurement::class)]
 #[CoversClass(DeviceStatusTemperatureMeasurementTransformer::class)]
@@ -38,6 +38,9 @@ final class DeviceStatusTemperatureMeasurementTransformerTest extends TestCase
         self::assertSame($temperature, $actual->getTemperature());
     }
 
+    /**
+     * @param mixed[] $data
+     */
     #[TestWith([[]])]
     #[TestWith([[DeviceStatusTemperatureMeasurementTransformerInterface::KEY_TEMPERATURE => 'test-not-an-array']])]
     public function testTransformUnexpectedData(array $data): void
@@ -45,7 +48,7 @@ final class DeviceStatusTemperatureMeasurementTransformerTest extends TestCase
         $tempTransformer = $this->createMock(DeviceStatusTemperatureMeasurementTemperatureTransformerInterface::class);
         $transformer = new DeviceStatusTemperatureMeasurementTransformer($tempTransformer);
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DeviceStatusTemperatureMeasurementTransformerInterface::UNEXPECTED_ARRAY_SPRINTF, DeviceStatusTemperatureMeasurementTransformerInterface::KEY_TEMPERATURE));
         $transformer->transform($data);
     }

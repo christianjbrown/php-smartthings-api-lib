@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Transformer;
 
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\Device;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
-use RuntimeException;
 
 use function is_array;
 use function is_string;
@@ -21,27 +21,81 @@ final class DeviceTransformer implements DeviceTransformerInterface
         $this->deviceComponentsTransformer = $deviceComponentsTransformer;
     }
 
+    /**
+     * @param mixed[] $data
+     */
     public function transform(array $data): DeviceInterface
     {
-        if (empty($data[self::KEY_DEVICE_ID]) || !is_string($data[self::KEY_DEVICE_ID])) {
-            throw new RuntimeException(sprintf(self::UNEXPECTED_STRING_SPRINTF, self::KEY_DEVICE_ID));
+        if (empty($data[self::KEY_DEVICE_ID])) {
+            throw new UnexpectedResponseException(sprintf(self::UNEXPECTED_STRING_SPRINTF, self::KEY_DEVICE_ID));
         }
-        $deviceId = $data[self::KEY_DEVICE_ID];
-        $device = new Device($deviceId);
+        if (!is_string($data[self::KEY_DEVICE_ID])) {
+            throw new UnexpectedResponseException(sprintf(self::UNEXPECTED_STRING_SPRINTF, self::KEY_DEVICE_ID));
+        }
+        $device = new Device($data[self::KEY_DEVICE_ID]);
 
-        if (!empty($data[self::KEY_LABEL]) && is_string($data[self::KEY_LABEL])) {
-            $device->setLabel($data[self::KEY_LABEL]);
-        }
-
-        if (!empty($data[self::KEY_NAME]) && is_string($data[self::KEY_NAME])) {
-            $device->setName($data[self::KEY_NAME]);
-        }
-
-        if (!empty($data[self::KEY_COMPONENTS]) && is_array($data[self::KEY_COMPONENTS])) {
-            $components = $this->deviceComponentsTransformer->transform($data[self::KEY_COMPONENTS]);
-            $device->setComponents($components);
-        }
+        $this->applyLabel($device, $data);
+        $this->applyLocationId($device, $data);
+        $this->applyName($device, $data);
+        $this->applyRoomId($device, $data);
+        $this->applyComponents($device, $data);
 
         return $device;
+    }
+
+    private function applyComponents(Device $device, array $data): void
+    {
+        if (empty($data[self::KEY_COMPONENTS])) {
+            return;
+        }
+        if (!is_array($data[self::KEY_COMPONENTS])) {
+            return;
+        }
+        $components = $this->deviceComponentsTransformer->transform($data[self::KEY_COMPONENTS]);
+        $device->setComponents($components);
+    }
+
+    private function applyLabel(Device $device, array $data): void
+    {
+        if (empty($data[self::KEY_LABEL])) {
+            return;
+        }
+        if (!is_string($data[self::KEY_LABEL])) {
+            return;
+        }
+        $device->setLabel($data[self::KEY_LABEL]);
+    }
+
+    private function applyLocationId(Device $device, array $data): void
+    {
+        if (empty($data[self::KEY_LOCATION_ID])) {
+            return;
+        }
+        if (!is_string($data[self::KEY_LOCATION_ID])) {
+            return;
+        }
+        $device->setLocationId($data[self::KEY_LOCATION_ID]);
+    }
+
+    private function applyName(Device $device, array $data): void
+    {
+        if (empty($data[self::KEY_NAME])) {
+            return;
+        }
+        if (!is_string($data[self::KEY_NAME])) {
+            return;
+        }
+        $device->setName($data[self::KEY_NAME]);
+    }
+
+    private function applyRoomId(Device $device, array $data): void
+    {
+        if (empty($data[self::KEY_ROOM_ID])) {
+            return;
+        }
+        if (!is_string($data[self::KEY_ROOM_ID])) {
+            return;
+        }
+        $device->setRoomId($data[self::KEY_ROOM_ID]);
     }
 }

@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace ChristianBrown\SmartThings\Tests\Api;
 
-use ChristianBrown\JsonApiClient\JsonApiRequestExceptionInterface;
-use ChristianBrown\JsonApiClient\JsonApiRequestSenderInterface;
+use ChristianBrown\ApiClient\Exception\Request\RequestExceptionInterface;
+use ChristianBrown\ApiClient\JsonApiRequestSenderInterface;
 use ChristianBrown\SmartThings\Api\ApiInterface;
 use ChristianBrown\SmartThings\Api\DeviceApi;
 use ChristianBrown\SmartThings\Api\DeviceApiInterface;
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
 use ChristianBrown\SmartThings\Model\DeviceInterface;
 use ChristianBrown\SmartThings\Transformer\DevicesTransformerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\MockObject\Exception;
-use PHPUnit\Framework\TestCase;
 
-use RuntimeException;
+use PHPUnit\Framework\TestCase;
 
 use function sprintf;
 
@@ -24,10 +24,10 @@ use function sprintf;
 final class DeviceApiTest extends TestCase
 {
     /**
-     * @throws JsonApiRequestExceptionInterface
+     * @throws RequestExceptionInterface
      * @throws Exception
      */
-    public function testGet(): void
+    public function testGetMultiple(): void
     {
         $data = [
             DeviceApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
@@ -52,18 +52,81 @@ final class DeviceApiTest extends TestCase
             ->willReturn($devices);
 
         $deviceApi = new DeviceApi($requestSender, $devicesTransformer, 'test-api-token');
-        $actual = $deviceApi->get();
+        $actual = $deviceApi->getMultiple();
 
         self::assertSame($devices, $actual);
     }
 
     /**
-     * @throws JsonApiRequestExceptionInterface
+     * @throws RequestExceptionInterface
      * @throws Exception
      */
-    #[TestWith([['test-items-key-missing']])]
-    #[TestWith([[DeviceApiInterface::KEY_ITEMS => 'test-not-array']])]
-    public function testGetUnexpectedResponse(array $data): void
+    public function testGetMultipleCaches(): void
+    {
+        $data = [
+            DeviceApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
+        ];
+
+        $devices = [$this->createMock(DeviceInterface::class)];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::once())
+            ->method('get')
+            ->willReturn($data);
+
+        $devicesTransformer = $this->createMock(DevicesTransformerInterface::class);
+        $devicesTransformer->expects(self::once())
+            ->method('transform')
+            ->with($data[DeviceApiInterface::KEY_ITEMS])
+            ->willReturn($devices);
+
+        $deviceApi = new DeviceApi($requestSender, $devicesTransformer, 'test-api-token');
+
+        // Second call is served from the cache without hitting the API.
+        self::assertSame($devices, $deviceApi->getMultiple());
+        self::assertSame($devices, $deviceApi->getMultiple());
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetMultipleSkipsCache(): void
+    {
+        $data = [
+            DeviceApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
+        ];
+
+        $devices = [$this->createMock(DeviceInterface::class)];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::exactly(2))
+            ->method('get')
+            ->willReturn($data);
+
+        $devicesTransformer = $this->createMock(DevicesTransformerInterface::class);
+        $devicesTransformer->method('transform')
+            ->with($data[DeviceApiInterface::KEY_ITEMS])
+            ->willReturn($devices);
+
+        $deviceApi = new DeviceApi($requestSender, $devicesTransformer, 'test-api-token');
+
+        // First call populates the cache; the second bypasses it and hits the API again.
+        self::assertSame($devices, $deviceApi->getMultiple());
+        self::assertSame($devices, $deviceApi->getMultiple(true));
+    }
+
+    /**
+     * @param mixed[] $data
+     *
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    #[TestWith([['test-items-key-missing'], false])]
+    #[TestWith([[DeviceApiInterface::KEY_ITEMS => 'test-not-array'], false])]
+    #[TestWith([['test-items-key-missing'], true])]
+    #[TestWith([[DeviceApiInterface::KEY_ITEMS => 'test-not-array'], true])]
+    public function testGetMultipleUnexpectedResponse(array $data, bool $skipCache): void
     {
         $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
         $requestSender->method('get')
@@ -80,8 +143,8 @@ final class DeviceApiTest extends TestCase
 
         $deviceApi = new DeviceApi($requestSender, $devicesTransformer, 'test-api-token');
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(UnexpectedResponseException::class);
         $this->expectExceptionMessage(sprintf(DeviceApiInterface::UNEXPECTED_RESPONSE_SPRINTF, DeviceApiInterface::KEY_ITEMS));
-        $deviceApi->get();
+        $deviceApi->getMultiple($skipCache);
     }
 }

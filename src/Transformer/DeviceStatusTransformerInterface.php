@@ -8,7 +8,11 @@ use ChristianBrown\SmartThings\Model\DeviceStatusInterface;
 
 interface DeviceStatusTransformerInterface
 {
+    public const KEY_RELATIVE_HUMIDITY_MEASUREMENT = 'relativeHumidityMeasurement';
     public const KEY_TEMPERATURE_MEASUREMENT = 'temperatureMeasurement';
 
+    /**
+     * @param mixed[] $data
+     */
     public function transform(array $data): DeviceStatusInterface;
 }

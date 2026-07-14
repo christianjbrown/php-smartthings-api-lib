@@ -16,5 +16,8 @@ interface DeviceStatusTemperatureMeasurementTemperatureTransformerInterface
     public const UNEXPECTED_FLOAT_SPRINTF = '%s not set or not a floating point number';
     public const UNEXPECTED_STRING_SPRINTF = '%s not set or not a string';
 
+    /**
+     * @param mixed[] $data
+     */
     public function transform(array $data): DeviceStatusTemperatureMeasurementTemperatureInterface;
 }

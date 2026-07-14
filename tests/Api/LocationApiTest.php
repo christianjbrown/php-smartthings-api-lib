@@ -1,0 +1,294 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ChristianBrown\SmartThings\Tests\Api;
+
+use ChristianBrown\ApiClient\Exception\Request\RequestExceptionInterface;
+use ChristianBrown\ApiClient\JsonApiRequestSenderInterface;
+use ChristianBrown\SmartThings\Api\ApiInterface;
+use ChristianBrown\SmartThings\Api\LocationApi;
+use ChristianBrown\SmartThings\Api\LocationApiInterface;
+use ChristianBrown\SmartThings\Exception\UnexpectedResponseException;
+use ChristianBrown\SmartThings\Model\LocationInterface;
+use ChristianBrown\SmartThings\Transformer\LocationsTransformerInterface;
+use ChristianBrown\SmartThings\Transformer\LocationTransformerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\MockObject\Exception;
+
+use PHPUnit\Framework\TestCase;
+
+use function sprintf;
+
+#[CoversClass(LocationApi::class)]
+final class LocationApiTest extends TestCase
+{
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetMultiple(): void
+    {
+        $data = [
+            LocationApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
+        ];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->method('get')
+            ->with(
+                LocationApiInterface::API_URL,
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $locations = [$this->createMock(LocationInterface::class), $this->createMock(LocationInterface::class)];
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+        $locationsTransformer->method('transform')
+            ->with($data[LocationApiInterface::KEY_ITEMS])
+            ->willReturn($locations);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+        $actual = $locationApi->getMultiple();
+
+        self::assertSame($locations, $actual);
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetMultipleCaches(): void
+    {
+        $data = [
+            LocationApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
+        ];
+
+        $locations = [$this->createMock(LocationInterface::class)];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::once())
+            ->method('get')
+            ->willReturn($data);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+        $locationsTransformer->expects(self::once())
+            ->method('transform')
+            ->with($data[LocationApiInterface::KEY_ITEMS])
+            ->willReturn($locations);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        // Second call is served from the cache without hitting the API.
+        self::assertSame($locations, $locationApi->getMultiple());
+        self::assertSame($locations, $locationApi->getMultiple());
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetMultipleSkipsCache(): void
+    {
+        $data = [
+            LocationApiInterface::KEY_ITEMS => ['test-item-1', 'test-item-2'],
+        ];
+
+        $locations = [$this->createMock(LocationInterface::class)];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::exactly(2))
+            ->method('get')
+            ->willReturn($data);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+        $locationsTransformer->method('transform')
+            ->with($data[LocationApiInterface::KEY_ITEMS])
+            ->willReturn($locations);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        // First call populates the cache; the second bypasses it and hits the API again.
+        self::assertSame($locations, $locationApi->getMultiple());
+        self::assertSame($locations, $locationApi->getMultiple(true));
+    }
+
+    /**
+     * @param mixed[] $data
+     *
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    #[TestWith([['test-items-key-missing'], false])]
+    #[TestWith([[LocationApiInterface::KEY_ITEMS => 'test-not-array'], false])]
+    #[TestWith([['test-items-key-missing'], true])]
+    #[TestWith([[LocationApiInterface::KEY_ITEMS => 'test-not-array'], true])]
+    public function testGetMultipleUnexpectedResponse(array $data, bool $skipCache): void
+    {
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->method('get')
+            ->with(
+                LocationApiInterface::API_URL,
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage(sprintf(LocationApiInterface::UNEXPECTED_RESPONSE_SPRINTF, LocationApiInterface::KEY_ITEMS));
+        $locationApi->getMultiple($skipCache);
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetOneById(): void
+    {
+        $data = ['test-location-data'];
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->method('get')
+            ->with(
+                sprintf(LocationApiInterface::API_URL_SPRINTF, 'test-location-id'),
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $location = $this->createMock(LocationInterface::class);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+        $locationTransformer->method('transform')
+            ->with($data)
+            ->willReturn($location);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+        $actual = $locationApi->getOneById('test-location-id');
+
+        self::assertSame($location, $actual);
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetOneByIdCaches(): void
+    {
+        $data = ['test-location-data'];
+
+        $location = $this->createMock(LocationInterface::class);
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::once())
+            ->method('get')
+            ->with(
+                sprintf(LocationApiInterface::API_URL_SPRINTF, 'test-location-id'),
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+        $locationTransformer->expects(self::once())
+            ->method('transform')
+            ->with($data)
+            ->willReturn($location);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        // Second call for the same locationId is served from the cache without hitting the API.
+        self::assertSame($location, $locationApi->getOneById('test-location-id'));
+        self::assertSame($location, $locationApi->getOneById('test-location-id'));
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    public function testGetOneByIdSkipsCache(): void
+    {
+        $data = ['test-location-data'];
+
+        $location = $this->createMock(LocationInterface::class);
+
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->expects(self::exactly(2))
+            ->method('get')
+            ->with(
+                sprintf(LocationApiInterface::API_URL_SPRINTF, 'test-location-id'),
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn($data);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+        $locationTransformer->method('transform')
+            ->with($data)
+            ->willReturn($location);
+
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        // First call populates the cache; the second bypasses it and hits the API again.
+        self::assertSame($location, $locationApi->getOneById('test-location-id'));
+        self::assertSame($location, $locationApi->getOneById('test-location-id', true));
+    }
+
+    /**
+     * @throws RequestExceptionInterface
+     * @throws Exception
+     */
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function testGetOneByIdUnexpectedResponse(bool $skipCache): void
+    {
+        $requestSender = $this->createMock(JsonApiRequestSenderInterface::class);
+        $requestSender->method('get')
+            ->with(
+                sprintf(LocationApiInterface::API_URL_SPRINTF, 'test-location-id'),
+                [],
+                [
+                    ApiInterface::HEADER_KEY_AUTHORIZATION => sprintf(ApiInterface::HEADER_VALUE_AUTHORIZATION_BEARER_SPRINTF, 'test-api-token'),
+                ]
+            )
+            ->willReturn([]);
+
+        $locationTransformer = $this->createMock(LocationTransformerInterface::class);
+        $locationsTransformer = $this->createMock(LocationsTransformerInterface::class);
+
+        $locationApi = new LocationApi($requestSender, $locationTransformer, $locationsTransformer, 'test-api-token');
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage(LocationApiInterface::UNEXPECTED_RESPONSE);
+        $locationApi->getOneById('test-location-id', $skipCache);
+    }
+}
