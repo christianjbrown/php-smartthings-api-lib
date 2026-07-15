@@ -1,7 +1,7 @@
 
 # Overview
 
-A strongly-typed PHP 8.2+ client for the [SmartThings API](https://developer.smartthings.com/). It lists the devices in your SmartThings account and reads a device's status, returning plain, typed model objects rather than raw arrays.
+A strongly-typed PHP 8.3+ client for the [SmartThings API](https://developer.smartthings.com/). It lists the devices in your SmartThings account and reads a device's status, returning plain, typed model objects rather than raw arrays.
 
 The client is **read-only** and currently supports:
 
@@ -15,7 +15,7 @@ The client is **read-only** and currently supports:
 ## :heavy_check_mark: Prerequisites
 
 - [Git](https://git-scm.com/)
-- [PHP](https://www.php.net/) 8.2 or higher (8.x)
+- [PHP](https://www.php.net/) 8.3 or higher (8.x)
 - [Composer](https://getcomposer.org/)
 
 :bulb: If you're on MacOS and have [Homebrew](https://brew.sh/), PHP and Composer will install with `brew install composer`.
