@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "christianjbrown/php-api-client-lib": "dev-main",
         "psr/container": "^2.0",
         "symfony/dependency-injection": "^7.2"

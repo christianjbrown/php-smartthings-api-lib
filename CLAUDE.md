@@ -5,7 +5,7 @@ small, uniform, and highly opinionated, so new code should be indistinguishable 
 
 ## What this is
 
-A strongly-typed, **read-only** PHP 8.2+ client for the [SmartThings API](https://developer.smartthings.com/).
+A strongly-typed, **read-only** PHP 8.3+ client for the [SmartThings API](https://developer.smartthings.com/).
 It lists devices and locations, reads a device's status, and reads rooms, returning typed model
 objects instead of raw arrays. The primary entry point is the `SmartThings` facade (`src/SmartThings.php`),
 which wires the clients and their transformer chains through a Symfony `ContainerBuilder` DI container.
@@ -30,10 +30,12 @@ After adding autoloadable files, run `composer dump-autoload` if the class isn't
 
 Style tooling comes from the `christianjbrown/php-code-quality-scripts` dev dependency (php-cs-fixer
 + PHP_CodeSniffer, **Symfony2 coding standard**); the `bin/php-cs*` scripts are thin wrappers over it.
-There is **no static analysis** (no PHPStan/Psalm) and **no CI** — the only checks are the style
-sniffer and the PHPUnit suite. Always run `composer fix-style` first (php-cs-fixer auto-fixes what
-it can), then `composer check-style` to surface any remaining violations that must be fixed by hand,
-then `composer test` before finishing.
+Static analysis is **PHPStan at `level: max`** (`phpstan.neon.dist`, run with `composer stan` /
+`./bin/phpstan analyse`), and there is a **GitHub Actions CI workflow** (`.github/workflows/ci.yml`)
+that runs style, PHPStan, and the PHPUnit suite with coverage on every push/PR. Always run
+`composer fix-style` first (php-cs-fixer auto-fixes what it can), then `composer check-style` to
+surface any remaining violations that must be fixed by hand, then `composer stan` and `composer test`
+before finishing.
 
 ## Architecture
 
